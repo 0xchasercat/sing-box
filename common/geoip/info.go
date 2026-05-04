@@ -32,12 +32,12 @@ func (r *Reader) LookupInfo(addr netip.Addr) GeoInfo {
 			country := strings.ToLower(record.Country.ISOCode)
 			tz := record.Location.TimeZone
 			if tz == "" {
-				tz = countryDefaultTimezone(country)
+				tz = CountryDefaultTimezone(country)
 			}
 			return GeoInfo{
 				Country:  country,
 				TimeZone: tz,
-				Locale:   countryLocale(country),
+				Locale:   CountryLocale(country),
 			}
 		}
 	}
@@ -50,22 +50,22 @@ func (r *Reader) LookupInfo(addr netip.Addr) GeoInfo {
 	}
 	return GeoInfo{
 		Country:  code,
-		TimeZone: countryDefaultTimezone(code),
-		Locale:   countryLocale(code),
+		TimeZone: CountryDefaultTimezone(code),
+		Locale:   CountryLocale(code),
 	}
 }
 
-// countryLocale returns the primary BCP 47 locale tag for a country code.
-func countryLocale(country string) string {
+// CountryLocale returns the primary BCP 47 locale tag for a country code.
+func CountryLocale(country string) string {
 	if locale, ok := localeMap[strings.ToLower(country)]; ok {
 		return locale
 	}
 	return "en-US"
 }
 
-// countryDefaultTimezone returns the primary IANA timezone for a country code.
+// CountryDefaultTimezone returns the primary IANA timezone for a country code.
 // Used as a fallback when the MMDB record has no timezone field.
-func countryDefaultTimezone(country string) string {
+func CountryDefaultTimezone(country string) string {
 	if tz, ok := timezoneMap[strings.ToLower(country)]; ok {
 		return tz
 	}
