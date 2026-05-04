@@ -2,6 +2,7 @@ package geoip
 
 import (
 	"net/netip"
+	"strings"
 
 	E "github.com/sagernet/sing/common/exceptions"
 
@@ -10,6 +11,7 @@ import (
 
 type Reader struct {
 	reader *maxminddb.Reader
+	dbType string
 }
 
 func Open(path string) (*Reader, []string, error) {
@@ -17,11 +19,12 @@ func Open(path string) (*Reader, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if database.Metadata.DatabaseType != "sing-geoip" {
+	dbType := database.Metadata.DatabaseType
+	if dbType != "sing-geoip" && !strings.HasPrefix(dbType, "GeoLite2") && !strings.HasPrefix(dbType, "GeoIP2") {
 		database.Close()
-		return nil, nil, E.New("incorrect database type, expected sing-geoip, got ", database.Metadata.DatabaseType)
+		return nil, nil, E.New("unsupported database type: ", dbType, " (expected sing-geoip, GeoLite2-*, or GeoIP2-*)")
 	}
-	return &Reader{database}, database.Metadata.Languages, nil
+	return &Reader{database, dbType}, database.Metadata.Languages, nil
 }
 
 func (r *Reader) Lookup(addr netip.Addr) string {
