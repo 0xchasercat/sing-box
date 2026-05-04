@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/sagernet/sing-box/log"
 	E "github.com/sagernet/sing/common/exceptions"
 
@@ -34,9 +36,10 @@ func geoipPreRun() error {
 	if err != nil {
 		return err
 	}
-	if reader.Metadata.DatabaseType != "sing-geoip" {
+	dbType := reader.Metadata.DatabaseType
+	if dbType != "sing-geoip" && !strings.HasPrefix(dbType, "GeoLite2") && !strings.HasPrefix(dbType, "GeoIP2") {
 		reader.Close()
-		return E.New("incorrect database type, expected sing-geoip, got ", reader.Metadata.DatabaseType)
+		return E.New("unsupported database type: ", dbType, " (expected sing-geoip, GeoLite2-*, or GeoIP2-*)")
 	}
 	geoipReader = reader
 	return nil
