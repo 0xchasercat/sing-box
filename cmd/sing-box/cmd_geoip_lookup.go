@@ -3,6 +3,7 @@ package main
 import (
 	"net/netip"
 	"os"
+	"strings"
 
 	"github.com/sagernet/sing-box/log"
 	E "github.com/sagernet/sing/common/exceptions"
@@ -36,11 +37,24 @@ func geoipLookup(address string) error {
 		os.Stdout.WriteString("private\n")
 		return nil
 	}
-	var code string
-	_ = geoipReader.Lookup(addr.AsSlice(), &code)
-	if code != "" {
-		os.Stdout.WriteString(code + "\n")
-		return nil
+	if geoipReader.Metadata.DatabaseType == "sing-geoip" {
+		var code string
+		_ = geoipReader.Lookup(addr.AsSlice(), &code)
+		if code != "" {
+			os.Stdout.WriteString(code + "\n")
+			return nil
+		}
+	} else {
+		var record struct {
+			Country struct {
+				ISOCode string `maxminddb:"iso_code"`
+			} `maxminddb:"country"`
+		}
+		_ = geoipReader.Lookup(addr.AsSlice(), &record)
+		if record.Country.ISOCode != "" {
+			os.Stdout.WriteString(strings.ToLower(record.Country.ISOCode) + "\n")
+			return nil
+		}
 	}
 	os.Stdout.WriteString("unknown\n")
 	return nil
